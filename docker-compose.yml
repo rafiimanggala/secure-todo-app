@@ -1,0 +1,86 @@
+services:
+  # PostgreSQL Database with SSL
+  database:
+    build:
+      context: ./database
+      dockerfile: Dockerfile
+    container_name: patient_db
+    environment:
+      POSTGRES_DB: patient_db
+      POSTGRES_USER: admin_user
+      POSTGRES_PASSWORD: SecureAdminPass123!
+    volumes:
+      - db_data:/var/lib/postgresql/data
+      - ./ssl:/etc/ssl/postgresql:ro
+      - ./database/init-scripts:/docker-entrypoint-initdb.d
+    ports:
+      - "5432:5432"
+    networks:
+      - patient_network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin_user -d patient_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Backend API Server
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: patient_backend
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      DB_HOST: database
+      DB_PORT: 5432
+      DB_NAME: patient_db
+      DB_ADMIN_USER: admin_user
+      DB_ADMIN_PASSWORD: SecureAdminPass123!
+      DB_DOCTOR_USER: doctor_user
+      DB_DOCTOR_PASSWORD: SecureDoctorPass123!
+      DB_NURSE_USER: nurse_user
+      DB_NURSE_PASSWORD: SecureNursePass123!
+      JWT_SECRET: patient-secret-key-change-in-production
+      JWT_EXPIRES_IN: 24h
+      ENCRYPTION_KEY: your-32-char-encryption-key!!
+    volumes:
+      - ./ssl:/app/certs:ro
+    ports:
+      - "3001:3000"
+    networks:
+      - patient_network
+    depends_on:
+      database:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # Frontend Web UI
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: patient_frontend
+    environment:
+      REACT_APP_API_URL: https://localhost:8443
+      REACT_APP_HTTPS_ONLY: true
+    volumes:
+      - ./ssl:/app/certs:ro
+    ports:
+      - "8080:80"
+      - "8443:443"
+    networks:
+      - patient_network
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+networks:
+  patient_network:
+    driver: bridge
+    name: patient_network
+
+volumes:
+  db_data:
+    name: patient_db_data

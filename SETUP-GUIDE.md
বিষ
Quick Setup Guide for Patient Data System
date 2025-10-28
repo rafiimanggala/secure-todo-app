@@ -1,0 +1,70 @@
+# Quick Setup Guide
+
+## Prerequisites
+- Docker and Docker Compose installed
+- Ports 80, 443, 3000, and 5432 available
+
+## Step-by-Step Setup
+
+### 1. Generate SSL Certificates
+
+```bash
+./ssl/generate-certs.sh
+```
+
+### 2. Copy Certificates to Frontend
+
+```bash
+cp ssl/frontend-*.pem frontend/ssl/
+cp ssl finca-cert.pem frontend/ssl/
+```
+
+### 3. Start Comment all Services
+
+```bash
+docker-compose up -d --build
+```
+
+### 4. Access the Application
+
+Open your browser and go to:
+- **https://localhost**
+
+Accept the self-signed certificate warning.
+
+### 5. Login with Default Credentials
+
+**Admin:**
+- Email: admin@hospital.com
+- Password: Admin123!
+
+**Doctor:**
+- Email: dr.john@hospital.com
+- Password: Dokter123!
+
+**Nurse:**
+- Email: nurse.jane@hospital.com
+- Password: Perawat123!
+
+## Troubleshooting
+
+### Check Service Status
+```bash
+docker-compose ps
+```
+
+### View Logs
+```bash
+docker-compose logs -f <service-name>
+```
+
+### Reset Everything
+```bash
+docker-compose down -v
+docker-compose up -d --build
+```
+
+## Default Credentials
+
+All default credentials are documented in the main README.md file.
+
