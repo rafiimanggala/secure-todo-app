@@ -40,6 +40,15 @@ exports.login = [
         { expiresIn: process.env.JWT_EXPIRES_IN || '24h' }
       );
 
+      // Set HttpOnly Secure cookie for JWT (no domain for localhost)
+      res.cookie('token', token, {
+        httpOnly: true,
+        secure: true,
+        sameSite: 'Strict',
+        maxAge: 24 * 60 * 60 * 1000,
+        path: '/'
+      });
+
       res.json({
         success: true,
         token,
@@ -71,8 +80,17 @@ exports.getMe = async (req, res, next) => {
   }
 };
 
-// Logout (client-side token removal, this is just for logging)
+// Logout: clear JWT cookie
 exports.logout = async (req, res) => {
+  try {
+    res.cookie('token', '', {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'Strict',
+      expires: new Date(0),
+      path: '/'
+    });
+  } catch {}
   res.json({ success: true, message: 'Logged out successfully' });
 };
 

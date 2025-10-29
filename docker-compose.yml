@@ -44,7 +44,7 @@ services:
       DB_NURSE_PASSWORD: SecureNursePass123!
       JWT_SECRET: patient-secret-key-change-in-production
       JWT_EXPIRES_IN: 24h
-      ENCRYPTION_KEY: your-32-char-encryption-key!!
+      ENCRYPTION_KEY: 0123456789ABCDEF0123456789ABCDEF
     volumes:
       - ./ssl:/app/certs:ro
     ports:
