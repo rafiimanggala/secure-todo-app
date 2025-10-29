@@ -42,6 +42,7 @@ services:
       DB_DOCTOR_PASSWORD: SecureDoctorPass123!
       DB_NURSE_USER: nurse_user
       DB_NURSE_PASSWORD: SecureNursePass123!
+      DB_SSL: 'true'
       JWT_SECRET: patient-secret-key-change-in-production
       JWT_EXPIRES_IN: 24h
       ENCRYPTION_KEY: 0123456789ABCDEF0123456789ABCDEF
@@ -74,6 +75,18 @@ services:
       - patient_network
     depends_on:
       - backend
+    restart: unless-stopped
+
+  # Database GUI - Adminer
+  adminer:
+    image: adminer:latest
+    container_name: adminer
+    ports:
+      - "5051:8080"
+    networks:
+      - patient_network
+    depends_on:
+      - database
     restart: unless-stopped
 
 networks:

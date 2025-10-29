@@ -2,25 +2,26 @@
 
 Sistem manajemen data pasien dengan arsitektur client-server menggunakan Docker.
 
-## Status Saat Ini
+## Ringkasan
 
-✅ Database: Running dan healthy  
-⚠️ Backend: Sedang diperbaiki  
-✅ Frontend: Running di port 8080 dan 8443
+- Arsitektur: React (Nginx HTTPS) → Express API → PostgreSQL (TLS)
+- Keamanan: HTTPS + HSTS, JWT via cookie HttpOnly Secure, CORS ketat, SQL parameterized, Audit log
+- DB GUI: Adminer tersedia di http://localhost:5051
 
 ## Akses Aplikasi
 
-- **HTTP**: http://localhost:8080
-- **HTTPS**: https://localhost:8443
+- App (HTTPS): https://localhost:8443
+- Adminer (DB GUI): http://localhost:5051
 
 ## Struktur Proyek
 
-Sistem menggunakan 3 container Docker:
-1. Frontend (React + Nginx) - Port 8080/8443
-2. Backend (Node.js Express) - Port 3000
-3. Database (PostgreSQL) - Port 5432
+Sistem menggunakan 4 container Docker:
+1. Frontend (React + Nginx) - 8080/8443
+2. Backend (Node.js Express) - 3001→3000
+3. Database (PostgreSQL TLS) - 5432
+4. Adminer (DB GUI) - 5051→8080
 
-## Cara Menjalankan
+## Cara Menjalankan (Quick Start)
 
 ```bash
 # 1. Start semua services
@@ -33,13 +34,59 @@ docker-compose ps
 docker-compose logs -f
 ```
 
-## Default Users
+## Kredensial Uji
 
 ```
 Admin:  admin@hospital.com / Admin123!
 Dokter: dr.john@hospital.com / Dokter123!
 Nurse:  nurse.jane@hospital.com / Perawat123!
 ```
+
+## Catatan Keamanan
+
+- HTTPS dipaksa (HSTS) untuk frontend; API di-proxy via Nginx `/api`
+- Token auth disimpan sebagai cookie `HttpOnly; Secure; SameSite=Strict`
+- Koneksi DB menggunakan TLS; Postgres dikonfigurasi `ssl=on`
+
+## Setup SSL: Kapan perlu dilakukan?
+
+Anda TIDAK perlu setup SSL setiap kali menjalankan project. Cukup jalankan `docker-compose up -d --build`.
+
+Hanya lakukan setup/regenerasi SSL pada kondisi berikut:
+- Pertama kali setup di mesin baru (folder `ssl/` belum ada)
+- Anda menghapus folder `ssl/` atau mengganti hostname/CN sertifikat
+- Sertifikat kedaluwarsa dan perlu diperbarui
+
+Langkah setup SSL (hanya saat diperlukan):
+```bash
+# 1) Generate sertifikat self-signed untuk dev
+./ssl/generate-certs.sh
+
+# 2) Salin sertifikat frontend (sekali saat awal atau saat regenerate)
+cp ssl/frontend-*.pem frontend/ssl/
+cp ssl/ca-cert.pem frontend/ssl/
+
+# 3) Jalankan stack
+docker-compose up -d --build
+```
+
+## Alur rutin harian (run biasa)
+
+```bash
+docker-compose up -d --build
+# App:     https://localhost:8443
+# Adminer:  http://localhost:5051
+```
+
+## Login Adminer
+
+- URL: http://localhost:5051
+- System: PostgreSQL
+- Server: database
+- Database: patient_db
+- Username: admin_user
+- Password: SecureAdminPass123!
+- SSL: require (opsional verifikasi CA: gunakan file `ssl/ca-cert.pem`)
 
 ## Troubleshooting
 
@@ -54,6 +101,7 @@ docker-compose up -d --build
 docker-compose logs database
 docker-compose logs backend
 docker-compose logs frontend
+docker-compose logs adminer
 ```
 
 ## Port Mapping

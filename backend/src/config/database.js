@@ -6,7 +6,10 @@ const adminPool = new Pool({
   database: process.env.DB_NAME || 'patient_db',
   user: process.env.DB_ADMIN_USER || 'admin_user',
   password: process.env.DB_ADMIN_PASSWORD,
-  ssl: false,
+  ssl: process.env.DB_SSL === 'true' ? {
+    ca: process.env.DB_CA_CERT || undefined,
+    rejectUnauthorized: false
+  } : false,
   max: 20
 });
 
